@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, ChevronLeft, ChevronRight, ChevronsUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { listPatients, createPatient } from '../services/patientService';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -18,13 +18,19 @@ export default function PatientsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
+  const [sort, setSort] = useState('created_desc');
 
   const debouncedSearch = useDebounce(search, 300);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['patients', debouncedSearch, page],
-    queryFn: () => listPatients({ search: debouncedSearch, page, limit: 20 }),
+    queryKey: ['patients', debouncedSearch, page, sort],
+    queryFn: () => listPatients({ search: debouncedSearch, page, limit: 20, sort }),
   });
+
+  const cycleApptSort = () => {
+    setSort((s) => s === 'appt_asc' ? 'appt_desc' : 'appt_asc');
+    setPage(1);
+  };
 
   const createMutation = useMutation({
     mutationFn: createPatient,
@@ -85,11 +91,20 @@ export default function PatientsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                {['Temp Number', 'Name', 'Age', 'Gender', 'Contact', 'Added'].map((h) => (
+                {['Temp Number', 'Name', 'Age', 'Gender', 'Contact'].map((h) => (
                   <th key={h} className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">
                     {h}
                   </th>
                 ))}
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-5 py-3">
+                  <button
+                    onClick={cycleApptSort}
+                    className="flex items-center gap-1 hover:text-gray-800 transition-colors"
+                  >
+                    Next Appointment
+                    {sort === 'appt_asc' ? <ArrowUp size={12} /> : sort === 'appt_desc' ? <ArrowDown size={12} /> : <ChevronsUpDown size={12} />}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -116,7 +131,9 @@ export default function PatientsPage() {
                     )}
                   </td>
                   <td className="px-5 py-4 text-sm text-gray-600">{p.contact || '—'}</td>
-                  <td className="px-5 py-4 text-sm text-gray-500">{formatDate(p.created_at)}</td>
+                  <td className="px-5 py-4 text-sm text-gray-500">
+                    {p.next_appointment_at ? formatDate(p.next_appointment_at) : <span className="text-gray-300">No Appointment</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>
