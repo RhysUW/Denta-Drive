@@ -1,16 +1,23 @@
 const supabase = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 
-const listPatients = async (userId, { search, page = 1, limit = 20 }) => {
+const listPatients = async (userId, { search, page = 1, limit = 20, sort = 'created_desc' }) => {
   let query = supabase
-    .from('patients')
-    .select('id, temp_number, name, age, gender, contact, created_at', { count: 'exact' })
+    .from('patients_with_next_appt')
+    .select('id, temp_number, name, age, gender, contact, created_at, next_appointment_at', { count: 'exact' })
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,temp_number.ilike.%${search}%`);
+  }
+
+  if (sort === 'appt_asc') {
+    query = query.order('next_appointment_at', { ascending: true });
+  } else if (sort === 'appt_desc') {
+    query = query.order('next_appointment_at', { ascending: false });
+  } else {
+    query = query.order('created_at', { ascending: false });
   }
 
   const { data, error, count } = await query;

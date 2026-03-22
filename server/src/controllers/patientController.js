@@ -8,11 +8,12 @@ const {
 
 const list = async (req, res, next) => {
   try {
-    const { search, page, limit } = req.query;
+    const { search, page, limit, sort } = req.query;
     const result = await patientService.listPatients(req.user.userId, {
       search,
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
+      sort,
     });
     res.json(result);
   } catch (err) {
