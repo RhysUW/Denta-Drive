@@ -9,7 +9,9 @@ const patientSchema = z.object({
   contact: z.string().max(50).optional().nullable(),
   health_conditions: z.array(z.string()).optional().default([]),
   current_medications: z.array(z.string()).optional().default([]),
-  remarks: z.string().optional().nullable(),
+  remarks:        z.string().optional().nullable(),
+  my_notes:       z.string().optional().nullable(),
+  previous_notes: z.string().optional().nullable(),
 });
 
 const updatePatientSchema = patientSchema.partial();
