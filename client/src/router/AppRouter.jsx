@@ -10,6 +10,7 @@ import GoalsPage from '../pages/GoalsPage';
 import MedicationsPage from '../pages/MedicationsPage';
 import TemplatesPage from '../pages/TemplatesPage';
 import ADACodesPage from '../pages/ADACodesPage';
+import TemplateDetailPage from '../pages/TemplateDetailPage';
 import Spinner from '../components/ui/Spinner';
 
 const ProtectedRoute = ({ children }) => {
@@ -46,6 +47,7 @@ export default function AppRouter() {
           <Route path="goals" element={<GoalsPage />} />
           <Route path="references/medications" element={<MedicationsPage />} />
           <Route path="references/templates" element={<TemplatesPage />} />
+          <Route path="references/templates/:id" element={<TemplateDetailPage />} />
           <Route path="references/ada-codes" element={<ADACodesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

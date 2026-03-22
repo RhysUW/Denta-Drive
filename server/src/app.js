@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const goalRoutes = require('./routes/goalRoutes');
+const templateRoutes = require('./routes/templateRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/patients', authMiddleware, patientRoutes);
 app.use('/api/appointments', authMiddleware, appointmentRoutes);
 app.use('/api/goals', authMiddleware, goalRoutes);
+app.use('/api/templates', authMiddleware, templateRoutes);
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
