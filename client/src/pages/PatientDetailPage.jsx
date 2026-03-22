@@ -143,14 +143,14 @@ export default function PatientDetailPage() {
         {/* Left column */}
         <div className="col-span-1 space-y-4">
           {/* Contact info card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
             <InfoRow icon={Phone} label="Phone" value={patient.contact} />
             <InfoRow icon={MapPin} label="Address" value={patient.address} />
           </div>
 
           {/* Appointments summary card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Next Appointment</h3>
             {nextAppointment ? (
               <div>
@@ -178,7 +178,7 @@ export default function PatientDetailPage() {
         {/* Right column */}
         <div className="col-span-2 space-y-4">
           {/* Health info */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Health Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -215,7 +215,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* Appointments list */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">Appointments</h3>
               <Button size="sm" icon={<Calendar size={13} />} onClick={() => setAddApptOpen(true)}>
@@ -248,7 +248,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* Images */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <ImageUploader patientId={id} />
           </div>
         </div>
