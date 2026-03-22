@@ -1,0 +1,11 @@
+- Goals changed to: Requirements
+- want added to each patient record a textbox where we can paste in previous remarks / notes from old appointments
+- patient ID changed to temp# in UI
+- Date of berth added to patient records
+-add all meds / medical conditions / dental side effects copied over from notion page
+- have a tab where you can create your own template for a specific type of notes that you can use in appointment notes. this template can be copied so that it can be used in titanium.
+-grab dental codes from ADA
+- in Reqirements add the ability to have all the appointments (with patients) that each step of the goal was completed on.
+-Add class requirement pdf (get from sal)
+-have separate tab for non requirement progress (unmarked work).
+-add allergies tab similar to medications / conditions

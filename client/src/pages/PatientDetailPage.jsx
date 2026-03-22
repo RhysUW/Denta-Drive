@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, Edit2, Trash2, Phone, MapPin, Calendar, CalendarDays, Clock,
+  ArrowLeft, Edit2, Trash2, Phone, MapPin, Calendar, CalendarDays, Clock, Maximize2, Minimize2,
 } from 'lucide-react';
 import { getPatient, updatePatient, deletePatient } from '../services/patientService';
 import { listAppointments } from '../services/appointmentService';
@@ -37,16 +37,36 @@ export default function PatientDetailPage() {
   const [addApptOpen, setAddApptOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [myNotes, setMyNotes] = useState('');
+  const [previousNotes, setPreviousNotes] = useState('');
+  const [myNotesExpanded, setMyNotesExpanded] = useState(false);
+  const [previousNotesExpanded, setPreviousNotesExpanded] = useState(false);
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ['patient', id],
     queryFn: () => getPatient(id),
   });
 
+  useEffect(() => {
+    if (patient) {
+      setMyNotes(patient.my_notes || '');
+      setPreviousNotes(patient.previous_notes || '');
+    }
+  }, [patient]);
+
   const { data: appointments = [] } = useQuery({
     queryKey: ['appointments', { patient_id: id }],
     queryFn: () => listAppointments({ patient_id: id }),
     enabled: !!id,
+  });
+
+  const saveNotesMutation = useMutation({
+    mutationFn: (data) => updatePatient(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+      toast.success('Notes saved');
+    },
+    onError: () => toast.error('Failed to save notes'),
   });
 
   const updateMutation = useMutation({
@@ -143,14 +163,14 @@ export default function PatientDetailPage() {
         {/* Left column */}
         <div className="col-span-1 space-y-4">
           {/* Contact info card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
             <InfoRow icon={Phone} label="Phone" value={patient.contact} />
             <InfoRow icon={MapPin} label="Address" value={patient.address} />
           </div>
 
           {/* Appointments summary card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Next Appointment</h3>
             {nextAppointment ? (
               <div>
@@ -178,7 +198,7 @@ export default function PatientDetailPage() {
         {/* Right column */}
         <div className="col-span-2 space-y-4">
           {/* Health info */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Health Information</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -215,7 +235,7 @@ export default function PatientDetailPage() {
           </div>
 
           {/* Appointments list */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">Appointments</h3>
               <Button size="sm" icon={<Calendar size={13} />} onClick={() => setAddApptOpen(true)}>
@@ -248,8 +268,62 @@ export default function PatientDetailPage() {
           </div>
 
           {/* Images */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <ImageUploader patientId={id} />
+          </div>
+
+          {/* My Notes */}
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">My Notes</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMyNotesExpanded((v) => !v)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title={myNotesExpanded ? 'Collapse' : 'Expand'}
+                >
+                  {myNotesExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                </button>
+                <Button size="sm" loading={saveNotesMutation.isPending} onClick={() => saveNotesMutation.mutate({ my_notes: myNotes })}>
+                  Save
+                </Button>
+              </div>
+            </div>
+            <textarea
+              value={myNotes}
+              onChange={(e) => setMyNotes(e.target.value)}
+              placeholder="Write your personal notes about this patient..."
+              rows={myNotesExpanded ? undefined : 5}
+              className={`w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${myNotesExpanded ? 'resize-none overflow-hidden' : 'resize-y'}`}
+              style={myNotesExpanded ? { height: 'auto', minHeight: '8rem', fieldSizing: 'content' } : {}}
+            />
+          </div>
+
+          {/* Previous Notes */}
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">Previous Notes</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPreviousNotesExpanded((v) => !v)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title={previousNotesExpanded ? 'Collapse' : 'Expand'}
+                >
+                  {previousNotesExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                </button>
+                <Button size="sm" loading={saveNotesMutation.isPending} onClick={() => saveNotesMutation.mutate({ previous_notes: previousNotes })}>
+                  Save
+                </Button>
+              </div>
+            </div>
+            <textarea
+              value={previousNotes}
+              onChange={(e) => setPreviousNotes(e.target.value)}
+              placeholder="Notes from previous practitioners or records..."
+              rows={previousNotesExpanded ? undefined : 5}
+              className={`w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${previousNotesExpanded ? 'resize-none overflow-hidden' : 'resize-y'}`}
+              style={previousNotesExpanded ? { height: 'auto', minHeight: '8rem', fieldSizing: 'content' } : {}}
+            />
           </div>
         </div>
       </div>
