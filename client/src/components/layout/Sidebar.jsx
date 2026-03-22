@@ -1,6 +1,8 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, Calendar, Target, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
 
 const navItems = [
   { to: '/', icon: Users, label: 'Patients', end: true },
@@ -8,9 +10,17 @@ const navItems = [
   { to: '/goals', icon: Target, label: 'Goals' },
 ];
 
+const referenceItems = [
+  { to: '/references/medications', icon: Pill, label: 'Medications' },
+  { to: '/references/templates', icon: FileText, label: 'Templates' },
+  { to: '/references/ada-codes', icon: Hash, label: 'ADA Codes' },
+];
+
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [referencesOpen, setReferencesOpen] = useState(location.pathname.startsWith('/references'));
 
   const handleLogout = () => {
     logout();
@@ -25,7 +35,7 @@ export default function Sidebar() {
           <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
             <span className="text-white text-sm font-bold">D</span>
           </div>
-          <span className="text-white font-semibold text-base tracking-tight">DentalTrack</span>
+          <span className="text-white font-semibold text-base tracking-tight">Denta Drive</span>
         </div>
       </div>
 
@@ -48,6 +58,43 @@ export default function Sidebar() {
             {label}
           </NavLink>
         ))}
+
+        {/* References collapsible */}
+        <button
+          onClick={() => setReferencesOpen((o) => !o)}
+          className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            location.pathname.startsWith('/references')
+              ? 'bg-brand-500 text-white'
+              : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <BookOpen size={18} />
+            References
+          </div>
+          {referencesOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+
+        {referencesOpen && (
+          <div className="pl-4 space-y-1">
+            {referenceItems.map(({ to, icon: Icon, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-brand-600 text-white'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  }`
+                }
+              >
+                <Icon size={16} />
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* User section */}
