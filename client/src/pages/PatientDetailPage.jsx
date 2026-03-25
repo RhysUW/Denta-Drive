@@ -267,11 +267,6 @@ export default function PatientDetailPage() {
             )}
           </div>
 
-          {/* Images */}
-          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
-            <ImageUploader patientId={id} />
-          </div>
-
           {/* My Notes */}
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
@@ -324,6 +319,10 @@ export default function PatientDetailPage() {
               className={`w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${previousNotesExpanded ? 'resize-none overflow-hidden' : 'resize-y'}`}
               style={previousNotesExpanded ? { height: 'auto', minHeight: '8rem', fieldSizing: 'content' } : {}}
             />
+          </div>
+          {/* Images */}
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
+            <ImageUploader patientId={id} />
           </div>
         </div>
       </div>
