@@ -192,8 +192,34 @@ const medicationsData = [
 
 export default medicationsData;
 
+// ─── Custom entries (user-added via MedicationsPage) ────────────────────────
+
+const CUSTOM_KEY = 'dentaltrack_medications_custom';
+
 /**
- * Flat list of all individual drug names for autocomplete.
- * Import this in PatientForm (or any component needing drug name suggestions).
+ * Read user customisations from localStorage.
+ * Shape: { patches: { [drugClass]: string[] }, newEntries: MedicationEntry[] }
  */
-export const allDrugNames = medicationsData.flatMap((entry) => entry.drugs);
+export function getCustomEntries() {
+  try {
+    return JSON.parse(localStorage.getItem(CUSTOM_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+/** Persist user customisations to localStorage. */
+export function saveCustomEntries(data) {
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(data));
+}
+
+/**
+ * All drug names (static + user-added) for autocomplete.
+ * Call as a function so PatientForm always gets the latest custom drugs.
+ */
+export function getAllDrugNames() {
+  const { patches = {}, newEntries = [] } = getCustomEntries();
+  const patchedNames = Object.values(patches).flat();
+  const newNames = newEntries.flatMap((e) => e.drugs);
+  return [...medicationsData.flatMap((e) => e.drugs), ...patchedNames, ...newNames];
+}

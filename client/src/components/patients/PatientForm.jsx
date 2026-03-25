@@ -7,7 +7,7 @@ import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
-import { allDrugNames } from '../../data/medicationsData';
+import { getAllDrugNames } from '../../data/medicationsData';
 
 const schema = z.object({
   temp_number: z.string().min(1, 'Temp number is required'),
@@ -138,7 +138,7 @@ export default function PatientForm({ defaultValues = {}, onSubmit, onCancel, lo
       <Input label="Contact" placeholder="+1 234 567 8900" {...register('contact')} />
       <Input label="Address" placeholder="Street, City, State" {...register('address')} />
       <TagInput label="Health Conditions" tags={healthConditions} onChange={setHealthConditions} />
-      <TagInput label="Current Medications" tags={medications} onChange={setMedications} suggestions={allDrugNames} />
+      <TagInput label="Current Medications" tags={medications} onChange={setMedications} suggestions={getAllDrugNames()} />
       <Textarea label="Remarks" placeholder="Additional notes..." rows={3} {...register('remarks')} />
 
       <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
