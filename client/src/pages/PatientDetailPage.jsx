@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, Edit2, Trash2, Phone, MapPin, Calendar, CalendarDays, Clock, Maximize2, Minimize2,
+  ArrowLeft, Edit2, Trash2, Phone, MapPin, Calendar, CalendarDays, Clock, Maximize2, Minimize2, History,
 } from 'lucide-react';
 import { getPatient, updatePatient, deletePatient } from '../services/patientService';
 import { listAppointments } from '../services/appointmentService';
@@ -238,9 +238,14 @@ export default function PatientDetailPage() {
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-gray-900">Appointments</h3>
-              <Button size="sm" icon={<Calendar size={13} />} onClick={() => setAddApptOpen(true)}>
-                Add
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="secondary" icon={<History size={13} />} onClick={() => navigate(`/patients/${id}/appointments`)}>
+                  Previous Appointments
+                </Button>
+                <Button size="sm" icon={<Calendar size={13} />} onClick={() => setAddApptOpen(true)}>
+                  Add
+                </Button>
+              </div>
             </div>
 
             {appointments.length === 0 ? (

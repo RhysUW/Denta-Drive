@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import PatientsPage from '../pages/PatientsPage';
 import PatientDetailPage from '../pages/PatientDetailPage';
+import PatientAppointmentsPage from '../pages/PatientAppointmentsPage';
 import CalendarPage from '../pages/CalendarPage';
 import GoalsPage from '../pages/GoalsPage';
 import MedicationsPage from '../pages/MedicationsPage';
@@ -43,6 +44,7 @@ export default function AppRouter() {
         >
           <Route index element={<PatientsPage />} />
           <Route path="patients/:id" element={<PatientDetailPage />} />
+          <Route path="patients/:id/appointments" element={<PatientAppointmentsPage />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="goals" element={<GoalsPage />} />
           <Route path="references/medications" element={<MedicationsPage />} />
