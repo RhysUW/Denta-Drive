@@ -21,6 +21,8 @@ const dentalRxItems = [
   { to: '/references/dental-rx/antibiotics', icon: Pill, label: 'Dental Antibiotics' },
   { to: '/references/dental-rx/antiviral', icon: Pill, label: 'Antiviral' },
   { to: '/references/dental-rx/antifungal', icon: Pill, label: 'Antifungal' },
+  { to: '/references/dental-rx/local-anaesthetic', icon: Pill, label: 'Local Anaesthetic' },
+  { to: '/references/dental-rx/analgesics', icon: Pill, label: 'Analgesics' },
 ];
 
 const subNavLink = (to, Icon, label) => (
