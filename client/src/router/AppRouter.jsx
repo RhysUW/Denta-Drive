@@ -12,6 +12,7 @@ import MedicationsPage from '../pages/MedicationsPage';
 import TemplatesPage from '../pages/TemplatesPage';
 import ADACodesPage from '../pages/ADACodesPage';
 import GeneralPage from '../pages/GeneralPage';
+import DentalRXPage from '../pages/DentalRXPage';
 import TemplateDetailPage from '../pages/TemplateDetailPage';
 import Spinner from '../components/ui/Spinner';
 
@@ -53,6 +54,7 @@ export default function AppRouter() {
           <Route path="references/templates/:id" element={<TemplateDetailPage />} />
           <Route path="references/ada-codes" element={<ADACodesPage />} />
           <Route path="references/general" element={<GeneralPage />} />
+          <Route path="references/dental-rx" element={<DentalRXPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

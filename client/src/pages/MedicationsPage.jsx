@@ -250,7 +250,7 @@ export default function MedicationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Medications</h1>
           <p className="text-sm text-gray-400 mt-1">
-            Cardiovascular drug reference — {medicationsData.length} built-in classes
+            Drug reference — {medicationsData.length} built-in classes
           </p>
         </div>
         <Button icon={<Plus size={15} />} onClick={() => setModalOpen(true)}>
