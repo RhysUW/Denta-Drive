@@ -113,10 +113,12 @@ function AddEntryModal({ onClose, onSave }) {
     if (!f) return;
     const isPdf = f.type === 'application/pdf';
     const isImage = f.type.startsWith('image/');
-    if (!isPdf && !isImage) return;
+    const isDocx = f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || f.name.endsWith('.docx');
+    if (!isPdf && !isImage && !isDocx) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      setFile({ name: f.name, dataUrl: e.target.result, fileType: isPdf ? 'pdf' : 'image' });
+      const fileType = isPdf ? 'pdf' : isDocx ? 'docx' : 'image';
+      setFile({ name: f.name, dataUrl: e.target.result, fileType });
       setName((prev) => prev || f.name.replace(/\.[^.]+$/, ''));
     };
     reader.readAsDataURL(f);
@@ -192,22 +194,22 @@ function AddEntryModal({ onClose, onSave }) {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,image/*"
+              accept=".pdf,.docx,image/*"
               className="hidden"
               onChange={(e) => handleFile(e.target.files[0])}
             />
             {file ? (
               <div className="flex items-center gap-2 text-sm text-gray-700">
-                {file.fileType === 'pdf'
-                  ? <File size={18} className="text-red-500" />
-                  : <ImageIcon size={18} className="text-blue-500" />}
+                {file.fileType === 'pdf' && <File size={18} className="text-red-500" />}
+                {file.fileType === 'docx' && <FileText size={18} className="text-blue-600" />}
+                {file.fileType === 'image' && <ImageIcon size={18} className="text-blue-500" />}
                 <span className="font-medium truncate max-w-xs">{file.name}</span>
               </div>
             ) : (
               <>
                 <Upload size={20} className="text-gray-400" />
                 <p className="text-xs text-gray-400">Drag & drop or click to upload</p>
-                <p className="text-xs text-gray-300">PDF or image files</p>
+                <p className="text-xs text-gray-300">PDF, Word (.docx), or image files</p>
               </>
             )}
           </div>
@@ -232,6 +234,7 @@ function AddEntryModal({ onClose, onSave }) {
 
 function ViewEntryModal({ entry, onClose }) {
   const isPdf = entry.type === 'file' && entry.fileType === 'pdf';
+  const isDocx = entry.type === 'file' && entry.fileType === 'docx';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
@@ -244,7 +247,7 @@ function ViewEntryModal({ entry, onClose }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <h2 className="text-base font-semibold text-gray-900 truncate">{entry.name}</h2>
           <div className="flex items-center gap-2 ml-4 shrink-0">
-            {isPdf && (
+            {(isPdf || isDocx) && (
               <button
                 onClick={() => openDataUrl(entry.dataUrl)}
                 className="text-xs font-medium text-gray-500 hover:text-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
@@ -272,6 +275,18 @@ function ViewEntryModal({ entry, onClose }) {
               title={entry.name}
               className="w-full h-full border-0"
             />
+          )}
+          {isDocx && (
+            <div className="flex flex-col items-center justify-center h-64 gap-4">
+              <FileText size={40} className="text-blue-600 opacity-60" />
+              <p className="text-sm text-gray-500">Word documents can't be previewed here.</p>
+              <button
+                onClick={() => openDataUrl(entry.dataUrl)}
+                className="text-sm font-medium text-white bg-brand-500 hover:bg-brand-600 px-4 py-2 rounded-lg transition-colors"
+              >
+                Open / Download
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -451,10 +466,11 @@ export default function GeneralPage() {
                             >
                               {entry.type === 'text' && <FileText size={15} className="text-gray-400 shrink-0" />}
                               {entry.type === 'file' && entry.fileType === 'pdf' && <File size={15} className="text-red-400 shrink-0" />}
+                              {entry.type === 'file' && entry.fileType === 'docx' && <FileText size={15} className="text-blue-600 shrink-0" />}
                               {entry.type === 'file' && entry.fileType === 'image' && <ImageIcon size={15} className="text-blue-400 shrink-0" />}
                               <span className="text-sm text-gray-700 truncate">{entry.name}</span>
                               <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full ${colour.badge}`}>
-                                {entry.type === 'text' ? 'Note' : entry.fileType === 'pdf' ? 'PDF' : 'Image'}
+                                {entry.type === 'text' ? 'Note' : entry.fileType === 'pdf' ? 'PDF' : entry.fileType === 'docx' ? 'Word' : 'Image'}
                               </span>
                             </button>
                             <button
