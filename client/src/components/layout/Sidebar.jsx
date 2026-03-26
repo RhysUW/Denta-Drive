@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash } from 'lucide-react';
+import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 
@@ -14,6 +14,7 @@ const referenceItems = [
   { to: '/references/medications', icon: Pill, label: 'Medications' },
   { to: '/references/templates', icon: FileText, label: 'Templates' },
   { to: '/references/ada-codes', icon: Hash, label: 'ADA Codes' },
+  { to: '/references/general', icon: LayoutGrid, label: 'General' },
 ];
 
 export default function Sidebar() {
