@@ -12,17 +12,40 @@ const navItems = [
 
 const referenceItems = [
   { to: '/references/medications', icon: Pill, label: 'Medications' },
-  { to: '/references/dental-rx', icon: ClipboardList, label: 'Dental RX' },
   { to: '/references/templates', icon: FileText, label: 'Templates' },
   { to: '/references/ada-codes', icon: Hash, label: 'ADA Codes' },
   { to: '/references/general', icon: LayoutGrid, label: 'General' },
 ];
+
+const dentalRxItems = [
+  { to: '/references/dental-rx/antibiotics', icon: Pill, label: 'Dental Antibiotics' },
+  { to: '/references/dental-rx/antiviral', icon: Pill, label: 'Antiviral' },
+  { to: '/references/dental-rx/antifungal', icon: Pill, label: 'Antifungal' },
+];
+
+const subNavLink = (to, Icon, label) => (
+  <NavLink
+    key={to}
+    to={to}
+    className={({ isActive }) =>
+      `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+        isActive
+          ? 'bg-brand-600 text-white'
+          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+      }`
+    }
+  >
+    <Icon size={16} />
+    {label}
+  </NavLink>
+);
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [referencesOpen, setReferencesOpen] = useState(location.pathname.startsWith('/references'));
+  const [dentalRxOpen, setDentalRxOpen] = useState(location.pathname.startsWith('/references/dental-rx'));
 
   const handleLogout = () => {
     logout();
@@ -42,7 +65,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}
@@ -79,22 +102,37 @@ export default function Sidebar() {
 
         {referencesOpen && (
           <div className="pl-4 space-y-1">
-            {referenceItems.map(({ to, icon: Icon, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-brand-600 text-white'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`
-                }
-              >
-                <Icon size={16} />
-                {label}
-              </NavLink>
-            ))}
+            {/* Medications */}
+            {subNavLink('/references/medications', Pill, 'Medications')}
+
+            {/* Dental RX nested collapsible */}
+            <button
+              onClick={() => setDentalRxOpen((o) => !o)}
+              className={`flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname.startsWith('/references/dental-rx')
+                  ? 'bg-brand-600 text-white'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <ClipboardList size={16} />
+                Dental RX
+              </div>
+              {dentalRxOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </button>
+
+            {dentalRxOpen && (
+              <div className="pl-4 space-y-1">
+                {dentalRxItems.map(({ to, icon: Icon, label }) =>
+                  subNavLink(to, Icon, label)
+                )}
+              </div>
+            )}
+
+            {/* Remaining reference items */}
+            {referenceItems.slice(1).map(({ to, icon: Icon, label }) =>
+              subNavLink(to, Icon, label)
+            )}
           </div>
         )}
       </nav>
