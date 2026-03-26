@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash, LayoutGrid } from 'lucide-react';
+import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash, LayoutGrid, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 
 const navItems = [
   { to: '/', icon: Users, label: 'Patients', end: true },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/goals', icon: Target, label: 'Goals' },
+  { to: '/goals', icon: Target, label: 'Requirements' },
 ];
 
 const referenceItems = [
   { to: '/references/medications', icon: Pill, label: 'Medications' },
+  { to: '/references/dental-rx', icon: ClipboardList, label: 'Dental RX' },
   { to: '/references/templates', icon: FileText, label: 'Templates' },
   { to: '/references/ada-codes', icon: Hash, label: 'ADA Codes' },
   { to: '/references/general', icon: LayoutGrid, label: 'General' },
