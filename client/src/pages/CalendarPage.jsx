@@ -115,6 +115,7 @@ export default function CalendarPage() {
           slotMinTime="07:00:00"
           slotMaxTime="20:00:00"
           allDaySlot={false}
+          expandRows={true}
           eventClassNames={(info) =>
             info.event.id === highlightId ? ['fc-event--highlighted'] : []
           }
