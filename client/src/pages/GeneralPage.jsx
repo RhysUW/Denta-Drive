@@ -14,6 +14,16 @@ function genId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+function openDataUrl(dataUrl, windowFeatures) {
+  const [header, base64] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mime }));
+  window.open(blobUrl, '_blank', windowFeatures ?? '');
+}
+
 // ─── Colour palette ───────────────────────────────────────────────────────────
 
 const COLOURS = [
@@ -236,7 +246,7 @@ function ViewEntryModal({ entry, onClose }) {
           <div className="flex items-center gap-2 ml-4 shrink-0">
             {isPdf && (
               <button
-                onClick={() => window.open(entry.dataUrl, '_blank')}
+                onClick={() => openDataUrl(entry.dataUrl)}
                 className="text-xs font-medium text-gray-500 hover:text-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
               >
                 Open in new tab
@@ -278,6 +288,8 @@ export default function GeneralPage() {
   const [addEntryForCategory, setAddEntryForCategory] = useState(null);
   const [viewEntry, setViewEntry] = useState(null);
   const [collapsed, setCollapsed] = useState({});
+  const [contextMenu, setContextMenu] = useState(null); // { x, y, entry }
+
 
   const persist = (next) => {
     setData(next);
@@ -427,6 +439,11 @@ export default function GeneralPage() {
                           <div
                             key={entry.id}
                             className="flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 transition-colors group"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setContextMenu({ x: e.clientX, y: e.clientY, entry });
+                            }}
                           >
                             <button
                               onClick={() => setViewEntry(entry)}
@@ -457,6 +474,45 @@ export default function GeneralPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Context menu */}
+      {contextMenu && (
+        <>
+          {/* Invisible backdrop — closes menu on any click or right-click */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setContextMenu(null)}
+            onContextMenu={(e) => { e.preventDefault(); setContextMenu(null); }}
+          />
+          <div
+            className="fixed z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[170px]"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            <button
+              onClick={() => { setViewEntry(contextMenu.entry); setContextMenu(null); }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Open
+            </button>
+            {contextMenu.entry.type === 'file' && (
+              <>
+                <button
+                  onClick={() => { openDataUrl(contextMenu.entry.dataUrl); setContextMenu(null); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Open in new tab
+                </button>
+                <button
+                  onClick={() => { openDataUrl(contextMenu.entry.dataUrl, 'noopener,width=1100,height=850'); setContextMenu(null); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Open in new window
+                </button>
+              </>
+            )}
+          </div>
+        </>
       )}
 
       {/* Modals */}
