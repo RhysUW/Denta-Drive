@@ -8,6 +8,7 @@ import { getPatient, updatePatient, deletePatient } from '../services/patientSer
 import { listAppointments } from '../services/appointmentService';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
+import MedicationBadge from '../components/ui/MedicationBadge';
 import Modal from '../components/ui/Modal';
 import Spinner from '../components/ui/Spinner';
 import PatientForm from '../components/patients/PatientForm';
@@ -218,7 +219,7 @@ export default function PatientDetailPage() {
                 {patient.current_medications?.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
                     {patient.current_medications.map((m) => (
-                      <Badge key={m} variant="yellow">{m}</Badge>
+                      <MedicationBadge key={m} name={m} />
                     ))}
                   </div>
                 ) : (
