@@ -433,3 +433,24 @@ export function getAllDrugNames() {
   const newNames = newEntries.flatMap((e) => e.drugs);
   return [...medicationsData.flatMap((e) => e.drugs), ...patchedNames, ...newNames];
 }
+
+/**
+ * Find the full medication entry for a given drug name.
+ * Searches static data (with user patches applied) and user-added new entries.
+ * Returns null if no matching entry is found.
+ */
+export function findEntryForDrug(drugName) {
+  const { patches = {}, newEntries = [] } = getCustomEntries();
+  const merged = [
+    ...medicationsData.map((entry) =>
+      patches[entry.drugClass]
+        ? { ...entry, drugs: [...entry.drugs, ...patches[entry.drugClass]] }
+        : entry
+    ),
+    ...newEntries,
+  ];
+  const lower = drugName.toLowerCase();
+  return merged.find((entry) =>
+    entry.drugs.some((d) => d.toLowerCase() === lower)
+  ) ?? null;
+}
