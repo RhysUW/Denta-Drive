@@ -5,8 +5,11 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { CalendarDays } from 'lucide-react';
 import { listAppointments } from '../services/appointmentService';
 import AppointmentModal from '../components/calendar/AppointmentModal';
+import AvailabilityModal, { loadAvailability } from '../components/calendar/AvailabilityModal';
+import Button from '../components/ui/Button';
 import { parseISO, addMonths, subMonths } from 'date-fns';
 
 function appointmentColor(appointment) {
@@ -22,6 +25,8 @@ export default function CalendarPage() {
   const highlightId = searchParams.get('highlight');
 
   const [modalState, setModalState] = useState({ open: false, appointment: null, defaultDate: '' });
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [availability, setAvailability] = useState(loadAvailability);
 
   // Fetch a wide range — 3 months back and 3 months forward
   const { data: appointments = [], refetch } = useQuery({
@@ -44,7 +49,7 @@ export default function CalendarPage() {
     }
   }, [highlightId, appointments]);
 
-  const events = appointments.map((a) => ({
+  const appointmentEvents = appointments.map((a) => ({
     id: a.id,
     title: `${a.patients?.name || 'Patient'} — ${a.title}`,
     start: a.appointment_at,
@@ -55,17 +60,31 @@ export default function CalendarPage() {
     classNames: a.id === highlightId ? ['fc-event--highlighted'] : [],
   }));
 
+  const availabilityEvent = availability
+    ? availability.map(({ day, startTime, endTime }) => ({
+        daysOfWeek: [day],
+        startTime,
+        endTime,
+        display: 'background',
+        backgroundColor: '#3b82f6',
+        startRecur: '2020-01-01',
+        endRecur: '2099-12-31',
+      }))
+    : [];
+
+  const events = [...appointmentEvents, ...availabilityEvent];
+
   const handleDateClick = (info) => {
     setModalState({ open: true, appointment: null, defaultDate: info.dateStr });
   };
 
   const handleEventClick = (info) => {
+    if (!info.event.extendedProps.appointment) return;
     setModalState({
       open: true,
       appointment: info.event.extendedProps.appointment,
       defaultDate: '',
     });
-    // Clear highlight when user clicks anything
     if (highlightId) setSearchParams({});
   };
 
@@ -88,11 +107,20 @@ export default function CalendarPage() {
 
   return (
     <div className="p-8 h-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
-        <p className="text-gray-500 text-sm mt-0.5">
-          Click a date to add an appointment, click an event to edit
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Click a date to add an appointment, click an event to edit
+          </p>
+        </div>
+        <Button
+          variant="secondary"
+          icon={<CalendarDays size={15} />}
+          onClick={() => setAvailabilityOpen(true)}
+        >
+          {availability ? 'Edit Availability' : 'Set Availability'}
+        </Button>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -128,6 +156,12 @@ export default function CalendarPage() {
         appointment={modalState.appointment}
         defaultDate={modalState.defaultDate}
         onSuccess={refetch}
+      />
+
+      <AvailabilityModal
+        open={availabilityOpen}
+        onClose={() => setAvailabilityOpen(false)}
+        onSave={setAvailability}
       />
     </div>
   );
