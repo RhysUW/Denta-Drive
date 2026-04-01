@@ -1,16 +1,16 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, X } from 'lucide-react';
 import { listAppointments } from '../services/appointmentService';
 import AppointmentModal from '../components/calendar/AppointmentModal';
-import AvailabilityModal, { loadAvailability } from '../components/calendar/AvailabilityModal';
+import AvailabilityModal, { loadAvailability, saveAvailability } from '../components/calendar/AvailabilityModal';
 import Button from '../components/ui/Button';
-import { parseISO, addMonths, subMonths } from 'date-fns';
+import { parseISO, addMonths, subMonths, format } from 'date-fns';
 
 function appointmentColor(appointment) {
   const now = new Date();
@@ -25,10 +25,12 @@ export default function CalendarPage() {
   const highlightId = searchParams.get('highlight');
 
   const [modalState, setModalState] = useState({ open: false, appointment: null, defaultDate: '' });
-  const [availabilityOpen, setAvailabilityOpen] = useState(false);
+  const [availabilityMode, setAvailabilityMode] = useState(false);
   const [availability, setAvailability] = useState(loadAvailability);
 
-  // Fetch a wide range — 3 months back and 3 months forward
+  // availabilityModal: { open, date, existingEntry }
+  const [availabilityModal, setAvailabilityModal] = useState({ open: false, date: null, existingEntry: null });
+
   const { data: appointments = [], refetch } = useQuery({
     queryKey: ['appointments'],
     queryFn: () => listAppointments({
@@ -37,7 +39,6 @@ export default function CalendarPage() {
     }),
   });
 
-  // Navigate to highlighted appointment date
   useEffect(() => {
     if (highlightId && appointments.length > 0) {
       const appt = appointments.find((a) => a.id === highlightId);
@@ -49,32 +50,36 @@ export default function CalendarPage() {
     }
   }, [highlightId, appointments]);
 
-  const appointmentEvents = appointments.map((a) => ({
-    id: a.id,
-    title: `${a.patients?.name || 'Patient'} — ${a.title}`,
-    start: a.appointment_at,
-    end: new Date(new Date(a.appointment_at).getTime() + (a.duration_mins || 60) * 60000).toISOString(),
-    backgroundColor: appointmentColor(a),
-    borderColor: appointmentColor(a),
-    extendedProps: { appointment: a },
-    classNames: a.id === highlightId ? ['fc-event--highlighted'] : [],
-  }));
-
-  const availabilityEvent = availability
-    ? availability.map(({ day, startTime, endTime }) => ({
-        daysOfWeek: [day],
-        startTime,
-        endTime,
-        display: 'background',
-        backgroundColor: '#3b82f6',
-        startRecur: '2020-01-01',
-        endRecur: '2099-12-31',
-      }))
-    : [];
-
-  const events = [...appointmentEvents, ...availabilityEvent];
+  const events = useMemo(() => [
+    ...appointments.map((a) => ({
+      id: a.id,
+      title: `${a.patients?.name || 'Patient'} — ${a.title}`,
+      start: a.appointment_at,
+      end: new Date(new Date(a.appointment_at).getTime() + (a.duration_mins || 60) * 60000).toISOString(),
+      backgroundColor: appointmentColor(a),
+      borderColor: appointmentColor(a),
+      extendedProps: { appointment: a },
+      classNames: a.id === highlightId ? ['fc-event--highlighted'] : [],
+    })),
+    ...availability.map(({ date, startTime, endTime }) => ({
+      id: `avail-${date}`,
+      start: `${date}T${startTime}`,
+      end: `${date}T${endTime}`,
+      display: 'background',
+      backgroundColor: '#3b82f6',
+    })),
+  ], [appointments, availability, highlightId]);
 
   const handleDateClick = (info) => {
+    // Extract date-only portion regardless of view
+    const date = info.dateStr.slice(0, 10);
+
+    if (availabilityMode) {
+      const existingEntry = availability.find((e) => e.date === date) ?? null;
+      setAvailabilityModal({ open: true, date, existingEntry });
+      return;
+    }
+
     setModalState({ open: true, appointment: null, defaultDate: info.dateStr });
   };
 
@@ -101,8 +106,19 @@ export default function CalendarPage() {
     }
   };
 
-  const handleModalClose = () => {
-    setModalState({ open: false, appointment: null, defaultDate: '' });
+  const handleAvailabilitySave = (date, startTime, endTime) => {
+    const updated = [
+      ...availability.filter((e) => e.date !== date),
+      { date, startTime, endTime },
+    ];
+    saveAvailability(updated);
+    setAvailability(updated);
+  };
+
+  const handleAvailabilityRemove = (date) => {
+    const updated = availability.filter((e) => e.date !== date);
+    saveAvailability(updated);
+    setAvailability(updated);
   };
 
   return (
@@ -111,17 +127,35 @@ export default function CalendarPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
           <p className="text-gray-500 text-sm mt-0.5">
-            Click a date to add an appointment, click an event to edit
+            {availabilityMode
+              ? 'Click any date to set your working hours for that day'
+              : 'Click a date to add an appointment, click an event to edit'}
           </p>
         </div>
-        <Button
-          variant="secondary"
-          icon={<CalendarDays size={15} />}
-          onClick={() => setAvailabilityOpen(true)}
-        >
-          {availability ? 'Edit Availability' : 'Set Availability'}
-        </Button>
+        {availabilityMode ? (
+          <Button
+            icon={<X size={15} />}
+            onClick={() => setAvailabilityMode(false)}
+          >
+            Done
+          </Button>
+        ) : (
+          <Button
+            variant="secondary"
+            icon={<CalendarDays size={15} />}
+            onClick={() => setAvailabilityMode(true)}
+          >
+            Set Availability
+          </Button>
+        )}
       </div>
+
+      {availabilityMode && (
+        <div className="mb-4 flex items-center gap-2.5 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 text-sm text-blue-700">
+          <CalendarDays size={15} className="flex-shrink-0" />
+          <span>Availability mode — click any date to add or edit your working hours. Click <strong>Done</strong> when finished.</span>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <FullCalendar
@@ -134,7 +168,7 @@ export default function CalendarPage() {
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}
           events={events}
-          editable={true}
+          editable={!availabilityMode}
           selectable={true}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
@@ -144,6 +178,10 @@ export default function CalendarPage() {
           slotMaxTime="20:00:00"
           allDaySlot={false}
           expandRows={true}
+          dayCellClassNames={(arg) => {
+            const dateStr = format(arg.date, 'yyyy-MM-dd');
+            return availability.some((e) => e.date === dateStr) ? ['fc-day--available'] : [];
+          }}
           eventClassNames={(info) =>
             info.event.id === highlightId ? ['fc-event--highlighted'] : []
           }
@@ -152,16 +190,19 @@ export default function CalendarPage() {
 
       <AppointmentModal
         open={modalState.open}
-        onClose={handleModalClose}
+        onClose={() => setModalState({ open: false, appointment: null, defaultDate: '' })}
         appointment={modalState.appointment}
         defaultDate={modalState.defaultDate}
         onSuccess={refetch}
       />
 
       <AvailabilityModal
-        open={availabilityOpen}
-        onClose={() => setAvailabilityOpen(false)}
-        onSave={setAvailability}
+        open={availabilityModal.open}
+        onClose={() => setAvailabilityModal({ open: false, date: null, existingEntry: null })}
+        date={availabilityModal.date}
+        existingEntry={availabilityModal.existingEntry}
+        onSave={handleAvailabilitySave}
+        onRemove={handleAvailabilityRemove}
       />
     </div>
   );
