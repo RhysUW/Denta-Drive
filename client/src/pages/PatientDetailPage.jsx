@@ -382,17 +382,22 @@ function AppointmentRow({ appointment, past, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${past ? 'bg-gray-50 hover:bg-gray-100' : 'bg-brand-50 hover:bg-brand-100'}`}
+      className={`p-3 rounded-xl cursor-pointer transition-colors ${past ? 'bg-gray-50 hover:bg-gray-100' : 'bg-brand-50 hover:bg-brand-100'}`}
     >
-      <div>
-        <p className={`text-sm font-medium ${past ? 'text-gray-600' : 'text-gray-900'}`}>{appointment.title}</p>
-        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-          <Clock size={11} />
-          {formatDateTime(appointment.appointment_at)}
-        </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className={`text-sm font-medium ${past ? 'text-gray-600' : 'text-gray-900'}`}>{appointment.title}</p>
+          <span className="text-xs text-gray-400 flex items-center gap-1">
+            <Clock size={11} />
+            {formatDateTime(appointment.appointment_at)}
+          </span>
+        </div>
+        {appointment.is_completed && (
+          <Badge variant="green">Completed</Badge>
+        )}
       </div>
-      {appointment.is_completed && (
-        <Badge variant="green">Completed</Badge>
+      {appointment.is_completed && appointment.notes && (
+        <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{appointment.notes}</p>
       )}
     </div>
   );
