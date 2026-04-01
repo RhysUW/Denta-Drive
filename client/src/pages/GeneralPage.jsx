@@ -230,6 +230,108 @@ function AddEntryModal({ onClose, onSave }) {
   );
 }
 
+// ─── Edit Entry Modal ─────────────────────────────────────────────────────────
+
+function EditEntryModal({ entry, onClose, onSave }) {
+  const [name, setName] = useState(entry.name);
+  const [content, setContent] = useState(entry.content ?? '');
+  const [file, setFile] = useState(null); // replacement file
+  const fileInputRef = useRef();
+
+  const handleFile = useCallback((f) => {
+    if (!f) return;
+    const isPdf = f.type === 'application/pdf';
+    const isImage = f.type.startsWith('image/');
+    const isDocx = f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || f.name.endsWith('.docx');
+    if (!isPdf && !isImage && !isDocx) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const fileType = isPdf ? 'pdf' : isDocx ? 'docx' : 'image';
+      setFile({ name: f.name, dataUrl: e.target.result, fileType });
+      setName((prev) => prev || f.name.replace(/\.[^.]+$/, ''));
+    };
+    reader.readAsDataURL(f);
+  }, []);
+
+  const canSave = name.trim() && (entry.type === 'text' ? content.trim() : true);
+
+  const handleSave = () => {
+    if (!canSave) return;
+    if (entry.type === 'text') {
+      onSave({ ...entry, name: name.trim(), content });
+    } else {
+      onSave({
+        ...entry,
+        name: name.trim(),
+        ...(file ? { dataUrl: file.dataUrl, fileType: file.fileType, fileName: file.name } : {}),
+      });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-gray-900">Edit entry</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+        </div>
+
+        <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 mb-4"
+        />
+
+        {entry.type === 'text' ? (
+          <>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Content</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={5}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 resize-none mb-4"
+            />
+          </>
+        ) : (
+          <>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Replace file (optional)</label>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 h-12 px-4 rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer transition-colors mb-4"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,image/*"
+                className="hidden"
+                onChange={(e) => handleFile(e.target.files[0])}
+              />
+              {file ? (
+                <span className="text-sm text-gray-700 truncate">{file.name}</span>
+              ) : (
+                <span className="text-xs text-gray-400">Click to replace file…</span>
+              )}
+            </div>
+          </>
+        )}
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg text-gray-600 hover:bg-gray-100">Cancel</button>
+          <button
+            disabled={!canSave}
+            onClick={handleSave}
+            className="px-4 py-2 text-sm rounded-lg bg-brand-500 text-white font-medium disabled:opacity-40 hover:bg-brand-600"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── View Entry Modal ─────────────────────────────────────────────────────────
 
 function ViewEntryModal({ entry, onClose }) {
@@ -301,6 +403,7 @@ export default function GeneralPage() {
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
   const [addEntryForCategory, setAddEntryForCategory] = useState(null);
+  const [editEntry, setEditEntry] = useState(null); // { categoryId, entry }
   const [viewEntry, setViewEntry] = useState(null);
   const [collapsed, setCollapsed] = useState({});
   const [contextMenu, setContextMenu] = useState(null); // { x, y, entry }
@@ -341,6 +444,17 @@ export default function GeneralPage() {
       ),
     });
     setAddEntryForCategory(null);
+  };
+
+  const updateEntry = (categoryId, updatedEntry) => {
+    persist({
+      categories: data.categories.map((c) =>
+        c.id === categoryId
+          ? { ...c, entries: c.entries.map((e) => e.id === updatedEntry.id ? updatedEntry : e) }
+          : c
+      ),
+    });
+    setEditEntry(null);
   };
 
   const deleteEntry = (categoryId, entryId) => {
@@ -474,6 +588,13 @@ export default function GeneralPage() {
                               </span>
                             </button>
                             <button
+                              onClick={(e) => { e.stopPropagation(); setEditEntry({ categoryId: cat.id, entry }); }}
+                              className="p-1 text-gray-300 hover:text-brand-500 opacity-0 group-hover:opacity-100 transition-all"
+                              title="Edit entry"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button
                               onClick={() => deleteEntry(cat.id, entry.id)}
                               className={`p-1 text-gray-300 ${colour.deleteHover} opacity-0 group-hover:opacity-100 transition-all`}
                               title="Delete entry"
@@ -540,6 +661,13 @@ export default function GeneralPage() {
       )}
       {addEntryForCategory && (
         <AddEntryModal onClose={() => setAddEntryForCategory(null)} onSave={addEntry} />
+      )}
+      {editEntry && (
+        <EditEntryModal
+          entry={editEntry.entry}
+          onClose={() => setEditEntry(null)}
+          onSave={(updated) => updateEntry(editEntry.categoryId, updated)}
+        />
       )}
       {viewEntry && (
         <ViewEntryModal entry={viewEntry} onClose={() => setViewEntry(null)} />

@@ -44,6 +44,14 @@
     @apply bg-brand-50;
   }
 
+  .fc .fc-daygrid-day.fc-day--available {
+    background-color: #eff6ff;
+  }
+
+  .fc .fc-daygrid-day.fc-day-today.fc-day--available {
+    background-color: #dbeafe;
+  }
+
   .fc-event {
     @apply cursor-pointer;
   }
