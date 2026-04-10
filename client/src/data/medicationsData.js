@@ -705,6 +705,114 @@ const medicationsData = [
     category: 'gastrointestinal',
   },
 
+  // ─── Hormonal Drugs ─────────────────────────────────────────────────────────
+
+  // Estrogens
+  {
+    drugs: ['Ethinyloestradiol', 'Oestradiol', 'Mestranol'],
+    drugClass: 'COCs — Estrogen Component',
+    mechanism: 'Synthetic estrogen — inhibits FSH and LH via negative feedback on hypothalamus/pituitary → suppresses ovulation.',
+    purpose: 'Contraception (combined oral contraceptive pill component).',
+    sideEffects: 'Nausea, breast tenderness, headache, VTE risk, mood changes.',
+    dentalConsiderations: 'Dry mouth, taste disturbance, gingival overgrowth, dry socket risk post-extraction. Advise additional contraception if prescribed broad-spectrum antibiotics.',
+    drugInteractions: 'Enzyme inducers (rifampicin, phenytoin) reduce efficacy. Broad-spectrum antibiotics — advise additional contraception.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Oestradiol patches', 'Oestradiol gel', 'Oestradiol tablets'],
+    drugClass: 'HRT — Estrogen',
+    mechanism: 'Replaces declining endogenous estrogen; binds estrogen receptors → maintains bone density, relieves vasomotor symptoms (flushing, vaginal dryness).',
+    purpose: 'Hormone replacement therapy for menopausal symptoms.',
+    sideEffects: 'Breast tenderness, nausea, fluid retention, VTE risk (oral).',
+    dentalConsiderations: 'Dry mouth, gingival inflammation, taste disturbance.',
+    drugInteractions: 'None significant in routine dental setting.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Tamoxifen', 'Clomiphene'],
+    drugClass: 'Anti-Estrogens (SERMs)',
+    mechanism: 'Tamoxifen: SERM — antagonist in breast tissue; used in oestrogen-sensitive breast cancer. Clomiphene: SERM — blocks hypothalamic estrogen receptors → stimulates FSH/LH release → induces ovulation.',
+    purpose: 'Tamoxifen: breast cancer treatment. Clomiphene: ovulation induction for infertility.',
+    sideEffects: 'Hot flushes, vaginal dryness, joint pain (tamoxifen), ovarian hyperstimulation (clomiphene).',
+    dentalConsiderations: 'Dry mouth, taste disturbance.',
+    drugInteractions: 'Tamoxifen + fluconazole/clarithromycin (CYP2D6 inhibitors) may alter tamoxifen metabolism.',
+    category: 'hormonal',
+  },
+
+  // Progestogens
+  {
+    drugs: ['Drospirenone', 'Levonorgestrel', 'Nomegestrol', 'Norethisterone'],
+    drugClass: 'COCs — Progestogen Component',
+    mechanism: 'Inhibits LH surge → prevents ovulation; thickens cervical mucus to impede sperm; alters endometrium to prevent implantation.',
+    purpose: 'Contraception (combined oral contraceptive pill component).',
+    sideEffects: 'Mood changes, breast tenderness, nausea, irregular bleeding.',
+    dentalConsiderations: 'Dry mouth, gingival overgrowth, dry socket risk post-extraction.',
+    drugInteractions: 'Enzyme inducers (rifampicin, phenytoin, carbamazepine) reduce efficacy — advise additional contraception.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Etonogestrel', 'Medroxyprogesterone'],
+    drugClass: 'Progestogen-Only Contraceptives',
+    mechanism: 'Thickens cervical mucus; suppresses LH to inhibit ovulation (implant/injection); alters endometrium to prevent implantation.',
+    purpose: 'Contraception for those unable to use estrogen-containing preparations.',
+    sideEffects: 'Irregular bleeding, amenorrhoea, weight gain, mood changes.',
+    dentalConsiderations: 'Dry mouth, gingival changes.',
+    drugInteractions: 'Enzyme inducers reduce efficacy of implant and oral forms; Mirena IUD unaffected.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Mifepristone'],
+    drugClass: 'Antiprogestogens',
+    mechanism: 'Competitive progesterone receptor antagonist → blocks progesterone → sensitises uterus to prostaglandins → medical termination of pregnancy.',
+    purpose: 'Medical termination of pregnancy.',
+    sideEffects: 'Cramping, bleeding, nausea, diarrhoea.',
+    dentalConsiderations: 'None direct.',
+    drugInteractions: 'None significant in dental setting.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Danazol'],
+    drugClass: 'Progestogens for Endometriosis',
+    mechanism: 'Suppress estrogen-driven endometrial growth; induce pseudopregnancy state suppressing menstruation.',
+    purpose: 'Endometriosis management.',
+    sideEffects: 'Weight gain, mood changes, irregular bleeding, acne (danazol).',
+    dentalConsiderations: 'Dry mouth, gingival changes.',
+    drugInteractions: 'None significant in dental setting.',
+    category: 'hormonal',
+  },
+
+  // Androgens
+  {
+    drugs: ['Testosterone gel', 'Testosterone patches', 'Testosterone injections'],
+    drugClass: 'Testosterone (HRT / Gender-Affirming)',
+    mechanism: 'Binds and activates androgen receptors → promotes reproductive development, secondary sex characteristics, muscle and bone maintenance; used in male hypogonadism and gender-affirming therapy.',
+    purpose: 'Male hypogonadism; gender-affirming hormone therapy.',
+    sideEffects: 'Acne, erythrocytosis, fluid retention, mood changes, hair loss.',
+    dentalConsiderations: 'Dry mouth, gingival changes.',
+    drugInteractions: 'None significant in dental setting.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Flutamide', 'Cyproterone'],
+    drugClass: 'Anti-Androgens',
+    mechanism: 'Competitively block androgen receptors → reduce androgenic effects; used in prostatic cancer, hyperandrogenism, and as progestogen component of some COCs.',
+    purpose: 'Prostatic cancer, hyperandrogenism, acne, and as component of some COCs.',
+    sideEffects: 'Hot flushes, gynaecomastia, liver toxicity (flutamide), fatigue.',
+    dentalConsiderations: 'Dry mouth, gingival overgrowth.',
+    drugInteractions: 'None significant in dental setting.',
+    category: 'hormonal',
+  },
+  {
+    drugs: ['Finasteride', 'Dutasteride'],
+    drugClass: '5-Alpha Reductase Inhibitors',
+    mechanism: 'Inhibit 5-alpha reductase enzyme → block conversion of testosterone to dihydrotestosterone (DHT) → reduce DHT-driven prostate growth; used in benign prostatic hyperplasia and male-pattern hair loss.',
+    purpose: 'Benign prostatic hyperplasia, male-pattern hair loss.',
+    sideEffects: 'Reduced libido, erectile dysfunction, gynaecomastia, decreased ejaculate volume.',
+    dentalConsiderations: 'None.',
+    drugInteractions: 'None significant in dental setting.',
+    category: 'hormonal',
+  },
+
   // ─── Respiratory Drugs ───────────────────────────────────────────────────────
 
   {
