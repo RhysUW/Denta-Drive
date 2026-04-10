@@ -28,8 +28,10 @@ const NEW_CLASS_FIELDS = [
 // ─── Category colours ─────────────────────────────────────────────────────────
 
 const CATEGORY_STYLES = {
-  cardiovascular: { pill: 'bg-blue-50 text-blue-700',  dot: 'bg-blue-500',  label: 'Cardiovascular' },
-  respiratory:    { pill: 'bg-red-50 text-red-700',    dot: 'bg-red-500',   label: 'Respiratory'    },
+  cardiovascular:   { pill: 'bg-blue-50 text-blue-700',     dot: 'bg-blue-500',     label: 'Cardiovascular'        },
+  respiratory:      { pill: 'bg-red-50 text-red-700',       dot: 'bg-red-500',      label: 'Respiratory'           },
+  renal:            { pill: 'bg-green-50 text-green-700',   dot: 'bg-green-500',    label: 'Renal & Genitourinary' },
+  gastrointestinal: { pill: 'bg-yellow-50 text-yellow-700', dot: 'bg-yellow-500',   label: 'Gastrointestinal'      },
 };
 
 function categoryStyles(category) {
