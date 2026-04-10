@@ -18,6 +18,7 @@ import DentalAntifungalPage from '../pages/DentalAntifungalPage';
 import LocalAnaestheticPage from '../pages/LocalAnaestheticPage';
 import AnalgesicsPage from '../pages/AnalgesicsPage';
 import TemplateDetailPage from '../pages/TemplateDetailPage';
+import EmergencyProtocolsPage from '../pages/EmergencyProtocolsPage';
 import Spinner from '../components/ui/Spinner';
 
 const ProtectedRoute = ({ children }) => {
@@ -63,6 +64,7 @@ export default function AppRouter() {
           <Route path="references/dental-rx/antifungal" element={<DentalAntifungalPage />} />
           <Route path="references/dental-rx/local-anaesthetic" element={<LocalAnaestheticPage />} />
           <Route path="references/dental-rx/analgesics" element={<AnalgesicsPage />} />
+          <Route path="references/emergency-protocols" element={<EmergencyProtocolsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
