@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash, LayoutGrid, ClipboardList } from 'lucide-react';
+import { Users, Calendar, Target, LogOut, BookOpen, ChevronDown, ChevronRight, Pill, FileText, Hash, LayoutGrid, ClipboardList, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 
@@ -130,6 +130,9 @@ export default function Sidebar() {
                 )}
               </div>
             )}
+
+            {/* Emergency Protocols */}
+            {subNavLink('/references/emergency-protocols', ShieldAlert, 'Emerg Protocols')}
 
             {/* Remaining reference items */}
             {referenceItems.slice(1).map(({ to, icon: Icon, label }) =>

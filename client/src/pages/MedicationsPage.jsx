@@ -201,6 +201,7 @@ function AddDrugModal({ open, onClose, existingClasses, onSave }) {
 export default function MedicationsPage() {
   const [query, setQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
 
   // Merge static base data with user patches and new entries from localStorage
   const [allEntries, setAllEntries] = useState(() => {
@@ -215,17 +216,23 @@ export default function MedicationsPage() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return allEntries;
-    return allEntries.filter((entry) =>
-      entry.drugs.some((d) => d.toLowerCase().includes(q)) ||
-      entry.drugClass.toLowerCase().includes(q) ||
-      entry.mechanism.toLowerCase().includes(q) ||
-      entry.purpose.toLowerCase().includes(q) ||
-      entry.sideEffects.toLowerCase().includes(q) ||
-      entry.dentalConsiderations.toLowerCase().includes(q) ||
-      entry.drugInteractions.toLowerCase().includes(q)
-    );
-  }, [query, allEntries]);
+    return allEntries.filter((entry) => {
+      if (activeCategory) {
+        const entryCat = entry.category ?? 'cardiovascular';
+        if (entryCat !== activeCategory) return false;
+      }
+      if (!q) return true;
+      return (
+        entry.drugs.some((d) => d.toLowerCase().includes(q)) ||
+        entry.drugClass.toLowerCase().includes(q) ||
+        entry.mechanism.toLowerCase().includes(q) ||
+        entry.purpose.toLowerCase().includes(q) ||
+        entry.sideEffects.toLowerCase().includes(q) ||
+        entry.dentalConsiderations.toLowerCase().includes(q) ||
+        entry.drugInteractions.toLowerCase().includes(q)
+      );
+    });
+  }, [query, allEntries, activeCategory]);
 
   const handleSave = ({ mode, drugName, targetClass, classData }) => {
     let updated;
@@ -288,12 +295,20 @@ export default function MedicationsPage() {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mb-4">
-        {Object.values(CATEGORY_STYLES).map(({ dot, pill, label }) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dot}`} />
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${pill}`}>{label} Drugs</span>
-          </div>
-        ))}
+        {Object.entries(CATEGORY_STYLES).map(([key, { dot, pill, label }]) => {
+          const isActive = activeCategory === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveCategory(isActive ? null : key)}
+              className={`flex items-center gap-1.5 rounded-full transition-all ${isActive ? 'ring-2 ring-offset-1 ring-gray-400' : 'opacity-70 hover:opacity-100'}`}
+            >
+              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dot}`} />
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${pill}`}>{label} Drugs</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Table */}
