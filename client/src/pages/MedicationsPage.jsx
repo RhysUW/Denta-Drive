@@ -33,6 +33,7 @@ const CATEGORY_STYLES = {
   renal:            { pill: 'bg-green-50 text-green-700',   dot: 'bg-green-500',    label: 'Renal & Genitourinary' },
   gastrointestinal: { pill: 'bg-yellow-50 text-yellow-700', dot: 'bg-yellow-500',   label: 'Gastrointestinal'      },
   hormonal:         { pill: 'bg-purple-50 text-purple-700', dot: 'bg-purple-500',   label: 'Hormonal'              },
+  dermatological:   { pill: 'bg-pink-50 text-pink-700',    dot: 'bg-pink-500',     label: 'Dermatological'        },
 };
 
 function categoryStyles(category) {
