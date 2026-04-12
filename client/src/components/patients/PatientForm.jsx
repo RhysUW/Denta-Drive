@@ -93,6 +93,7 @@ function TagInput({ label, tags, onChange, suggestions = [] }) {
 export default function PatientForm({ defaultValues = {}, onSubmit, onCancel, loading }) {
   const [healthConditions, setHealthConditions] = useState(defaultValues.health_conditions || []);
   const [medications, setMedications] = useState(defaultValues.current_medications || []);
+  const [allergies, setAllergies] = useState(defaultValues.allergies || []);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
@@ -114,6 +115,7 @@ export default function PatientForm({ defaultValues = {}, onSubmit, onCancel, lo
       gender: data.gender || null,
       health_conditions: healthConditions,
       current_medications: medications,
+      allergies,
     };
     onSubmit(payload);
   };
@@ -139,6 +141,7 @@ export default function PatientForm({ defaultValues = {}, onSubmit, onCancel, lo
       <Input label="Address" placeholder="Street, City, State" {...register('address')} />
       <TagInput label="Health Conditions" tags={healthConditions} onChange={setHealthConditions} />
       <TagInput label="Current Medications" tags={medications} onChange={setMedications} suggestions={getAllDrugNames()} />
+      <TagInput label="Allergies" tags={allergies} onChange={setAllergies} />
       <Textarea label="Remarks" placeholder="Additional notes..." rows={3} {...register('remarks')} />
 
       <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
