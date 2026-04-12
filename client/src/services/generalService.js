@@ -25,6 +25,9 @@ const mapCategory = (c) => ({
 export const listCategories = () =>
   api.get('/general/categories').then((r) => r.data.map(mapCategory));
 
+export const getEntry = (id) =>
+  api.get(`/general/entries/${id}`).then((r) => mapEntry(r.data));
+
 export const createCategory = ({ name, colour }) =>
   api.post('/general/categories', { name, colour }).then((r) => mapCategory({ ...r.data, general_entries: [] }));
 

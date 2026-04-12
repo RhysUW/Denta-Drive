@@ -1,5 +1,14 @@
 const generalService = require('../services/generalService');
 
+const getEntry = async (req, res, next) => {
+  try {
+    const data = await generalService.getEntry(req.user.userId, req.params.id);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+};
+
 const listCategories = async (req, res, next) => {
   try {
     const data = await generalService.listCategories(req.user.userId);
@@ -65,4 +74,4 @@ const deleteEntry = async (req, res, next) => {
   }
 };
 
-module.exports = { listCategories, createCategory, updateCategory, deleteCategory, addEntry, updateEntry, deleteEntry };
+module.exports = { listCategories, getEntry, createCategory, updateCategory, deleteCategory, addEntry, updateEntry, deleteEntry };

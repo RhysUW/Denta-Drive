@@ -1,11 +1,24 @@
 const supabase = require('../config/db');
 
 const listCategories = async (userId) => {
+  // Exclude data_url from the list — it can be megabytes of base64 per file.
+  // Fetch it on-demand via getEntry() when the user opens a specific entry.
   const { data, error } = await supabase
     .from('general_categories')
-    .select('*, general_entries(*)')
+    .select('*, general_entries(id, name, type, content, file_name, file_type, created_at)')
     .eq('user_id', userId)
     .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+};
+
+const getEntry = async (userId, id) => {
+  const { data, error } = await supabase
+    .from('general_entries')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .single();
   if (error) throw error;
   return data;
 };
@@ -90,6 +103,7 @@ const deleteEntry = async (userId, id) => {
 
 module.exports = {
   listCategories,
+  getEntry,
   createCategory,
   updateCategory,
   deleteCategory,
