@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft, Edit2, Trash2, Phone, MapPin, Calendar, CalendarDays, Clock, Maximize2, Minimize2, History,
+  ArrowLeft, Edit2, Trash2, Phone, MapPin, Calendar, CalendarDays, Clock, Maximize2, Minimize2, History, Plus,
 } from 'lucide-react';
 import { getPatient, updatePatient, deletePatient } from '../services/patientService';
 import { listAppointments } from '../services/appointmentService';
+import { listPreviousNotes, createPreviousNote, deletePreviousNote } from '../services/previousNotesService';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import MedicationBadge from '../components/ui/MedicationBadge';
@@ -39,9 +40,8 @@ export default function PatientDetailPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [myNotes, setMyNotes] = useState('');
-  const [previousNotes, setPreviousNotes] = useState('');
   const [myNotesExpanded, setMyNotesExpanded] = useState(false);
-  const [previousNotesExpanded, setPreviousNotesExpanded] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ['patient', id],
@@ -51,7 +51,6 @@ export default function PatientDetailPage() {
   useEffect(() => {
     if (patient) {
       setMyNotes(patient.my_notes || '');
-      setPreviousNotes(patient.previous_notes || '');
     }
   }, [patient]);
 
@@ -59,6 +58,31 @@ export default function PatientDetailPage() {
     queryKey: ['appointments', { patient_id: id }],
     queryFn: () => listAppointments({ patient_id: id }),
     enabled: !!id,
+  });
+
+  const { data: previousNotes = [] } = useQuery({
+    queryKey: ['previousNotes', id],
+    queryFn: () => listPreviousNotes(id),
+    enabled: !!id,
+  });
+
+  const addNoteMutation = useMutation({
+    mutationFn: (content) => createPreviousNote(id, content),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['previousNotes', id] });
+      setNewNoteContent('');
+      toast.success('Note added');
+    },
+    onError: () => toast.error('Failed to add note'),
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: (noteId) => deletePreviousNote(id, noteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['previousNotes', id] });
+      toast.success('Note deleted');
+    },
+    onError: () => toast.error('Failed to delete note'),
   });
 
   const saveNotesMutation = useMutation({
@@ -201,7 +225,7 @@ export default function PatientDetailPage() {
           {/* Health info */}
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Health Information</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-gray-400 mb-2">Health Conditions</p>
                 {patient.health_conditions?.length > 0 ? (
@@ -220,6 +244,18 @@ export default function PatientDetailPage() {
                   <div className="flex flex-wrap gap-1.5">
                     {patient.current_medications.map((m) => (
                       <MedicationBadge key={m} name={m} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">None recorded</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-2">Allergies</p>
+                {patient.allergies?.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {patient.allergies.map((a) => (
+                      <Badge key={a} variant="orange">{a}</Badge>
                     ))}
                   </div>
                 ) : (
@@ -302,29 +338,49 @@ export default function PatientDetailPage() {
 
           {/* Previous Notes */}
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Previous Notes</h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPreviousNotesExpanded((v) => !v)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  title={previousNotesExpanded ? 'Collapse' : 'Expand'}
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Previous Notes</h3>
+            {/* Compose area */}
+            <div className="mb-4">
+              <textarea
+                value={newNoteContent}
+                onChange={(e) => setNewNoteContent(e.target.value)}
+                placeholder="Add a note..."
+                rows={3}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 resize-y"
+              />
+              <div className="flex justify-end mt-2">
+                <Button
+                  size="sm"
+                  icon={<Plus size={13} />}
+                  loading={addNoteMutation.isPending}
+                  onClick={() => { if (newNoteContent.trim()) addNoteMutation.mutate(newNoteContent); }}
                 >
-                  {previousNotesExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-                </button>
-                <Button size="sm" loading={saveNotesMutation.isPending} onClick={() => saveNotesMutation.mutate({ previous_notes: previousNotes })}>
-                  Save
+                  Add Note
                 </Button>
               </div>
             </div>
-            <textarea
-              value={previousNotes}
-              onChange={(e) => setPreviousNotes(e.target.value)}
-              placeholder="Notes from previous practitioners or records..."
-              rows={previousNotesExpanded ? undefined : 5}
-              className={`w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 ${previousNotesExpanded ? 'resize-none overflow-hidden' : 'resize-y'}`}
-              style={previousNotesExpanded ? { height: 'auto', minHeight: '8rem', fieldSizing: 'content' } : {}}
-            />
+            {/* Notes list */}
+            {previousNotes.length === 0 ? (
+              <p className="text-sm text-gray-400">No previous notes yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {previousNotes.map((note) => (
+                  <div key={note.id}>
+                    <p className="text-xs text-gray-400 mb-1">{formatDate(note.created_at)}</p>
+                    <div className="flex items-start gap-2 bg-gray-50 rounded-xl px-3 py-2.5">
+                      <p className="text-sm text-gray-700 leading-relaxed flex-1 whitespace-pre-wrap break-words min-w-0">{note.content}</p>
+                      <button
+                        onClick={() => deleteNoteMutation.mutate(note.id)}
+                        className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
+                        title="Delete note"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {/* Images */}
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
