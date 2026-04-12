@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Badge from './Badge';
 import { findEntryForDrug } from '../../data/medicationsData';
+import { listCustomMedications } from '../../services/customMedicationsService';
 
 const FIELDS = [
   { key: 'purpose', label: 'Purpose' },
@@ -12,7 +14,14 @@ const FIELDS = [
 
 export default function MedicationBadge({ name }) {
   const [visible, setVisible] = useState(false);
-  const entry = findEntryForDrug(name);
+
+  // React Query caches this — all badges on the page share one request
+  const { data: customMeds = [] } = useQuery({
+    queryKey: ['customMedications'],
+    queryFn: listCustomMedications,
+  });
+
+  const entry = findEntryForDrug(name, customMeds);
 
   return (
     <span

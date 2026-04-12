@@ -1,18 +1,17 @@
 import { useState, useRef, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, FileText, Image as ImageIcon, File, Trash2, X, Upload, ChevronDown, ChevronRight, Edit2 } from 'lucide-react';
+import {
+  listCategories,
+  createCategory as apiCreateCategory,
+  updateCategory as apiUpdateCategory,
+  deleteCategory as apiDeleteCategory,
+  addEntry as apiAddEntry,
+  updateEntry as apiUpdateEntry,
+  deleteEntry as apiDeleteEntry,
+} from '../services/generalService';
 
-// ─── Persistence ─────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = 'dentaltrack_general_data';
-
-function loadData() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"categories":[]}'); }
-  catch { return { categories: [] }; }
-}
-
-function genId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function openDataUrl(dataUrl, windowFeatures) {
   const [header, base64] = dataUrl.split(',');
@@ -105,7 +104,7 @@ function AddEntryModal({ onClose, onSave }) {
   const [name, setName] = useState('');
   const [type, setType] = useState('text');
   const [content, setContent] = useState('');
-  const [file, setFile] = useState(null); // { name, dataUrl, fileType }
+  const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef();
 
@@ -158,7 +157,6 @@ function AddEntryModal({ onClose, onSave }) {
           className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 mb-4"
         />
 
-        {/* Type toggle */}
         <div className="flex gap-2 mb-4">
           {['text', 'file'].map((t) => (
             <button
@@ -235,7 +233,7 @@ function AddEntryModal({ onClose, onSave }) {
 function EditEntryModal({ entry, onClose, onSave }) {
   const [name, setName] = useState(entry.name);
   const [content, setContent] = useState(entry.content ?? '');
-  const [file, setFile] = useState(null); // replacement file
+  const [file, setFile] = useState(null);
   const fileInputRef = useRef();
 
   const handleFile = useCallback((f) => {
@@ -399,72 +397,55 @@ function ViewEntryModal({ entry, onClose }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function GeneralPage() {
-  const [data, setData] = useState(loadData);
+  const queryClient = useQueryClient();
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
   const [addEntryForCategory, setAddEntryForCategory] = useState(null);
   const [editEntry, setEditEntry] = useState(null); // { categoryId, entry }
   const [viewEntry, setViewEntry] = useState(null);
   const [collapsed, setCollapsed] = useState({});
-  const [contextMenu, setContextMenu] = useState(null); // { x, y, entry }
+  const [contextMenu, setContextMenu] = useState(null);
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['general'],
+    queryFn: listCategories,
+  });
 
-  const persist = (next) => {
-    setData(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  };
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['general'] });
 
-  // Category actions
-  const createCategory = ({ name, colour }) => {
-    persist({ categories: [...data.categories, { id: genId(), name, colour, entries: [] }] });
-    setAddCategoryOpen(false);
-  };
+  const createCategoryMutation = useMutation({
+    mutationFn: apiCreateCategory,
+    onSuccess: () => { invalidate(); setAddCategoryOpen(false); },
+  });
 
-  const updateCategory = ({ name, colour }) => {
-    persist({
-      categories: data.categories.map((c) =>
-        c.id === editCategory.id ? { ...c, name, colour } : c
-      ),
-    });
-    setEditCategory(null);
-  };
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({ id, ...rest }) => apiUpdateCategory(id, rest),
+    onSuccess: () => { invalidate(); setEditCategory(null); },
+  });
+
+  const deleteCategoryMutation = useMutation({
+    mutationFn: apiDeleteCategory,
+    onSuccess: invalidate,
+  });
+
+  const addEntryMutation = useMutation({
+    mutationFn: ({ categoryId, ...entry }) => apiAddEntry(categoryId, entry),
+    onSuccess: () => { invalidate(); setAddEntryForCategory(null); },
+  });
+
+  const updateEntryMutation = useMutation({
+    mutationFn: ({ id, ...rest }) => apiUpdateEntry(id, rest),
+    onSuccess: () => { invalidate(); setEditEntry(null); },
+  });
+
+  const deleteEntryMutation = useMutation({
+    mutationFn: apiDeleteEntry,
+    onSuccess: invalidate,
+  });
 
   const deleteCategory = (cat) => {
     if (!window.confirm(`Delete "${cat.name}" and all its entries?`)) return;
-    persist({ categories: data.categories.filter((c) => c.id !== cat.id) });
-  };
-
-  // Entry actions
-  const addEntry = (entry) => {
-    persist({
-      categories: data.categories.map((c) =>
-        c.id === addEntryForCategory
-          ? { ...c, entries: [...c.entries, { id: genId(), ...entry }] }
-          : c
-      ),
-    });
-    setAddEntryForCategory(null);
-  };
-
-  const updateEntry = (categoryId, updatedEntry) => {
-    persist({
-      categories: data.categories.map((c) =>
-        c.id === categoryId
-          ? { ...c, entries: c.entries.map((e) => e.id === updatedEntry.id ? updatedEntry : e) }
-          : c
-      ),
-    });
-    setEditEntry(null);
-  };
-
-  const deleteEntry = (categoryId, entryId) => {
-    persist({
-      categories: data.categories.map((c) =>
-        c.id === categoryId
-          ? { ...c, entries: c.entries.filter((e) => e.id !== entryId) }
-          : c
-      ),
-    });
+    deleteCategoryMutation.mutate(cat.id);
   };
 
   const toggleCollapse = (id) =>
@@ -488,7 +469,7 @@ export default function GeneralPage() {
       </div>
 
       {/* Empty state */}
-      {data.categories.length === 0 ? (
+      {categories.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
             <Plus size={24} className="text-gray-400" />
@@ -504,7 +485,7 @@ export default function GeneralPage() {
         </div>
       ) : (
         <div className="space-y-5">
-          {data.categories.map((cat) => {
+          {categories.map((cat) => {
             const colour = getColour(cat.colour);
             const isCollapsed = !!collapsed[cat.id];
 
@@ -595,7 +576,7 @@ export default function GeneralPage() {
                               <Edit2 size={14} />
                             </button>
                             <button
-                              onClick={() => deleteEntry(cat.id, entry.id)}
+                              onClick={() => deleteEntryMutation.mutate(entry.id)}
                               className={`p-1 text-gray-300 ${colour.deleteHover} opacity-0 group-hover:opacity-100 transition-all`}
                               title="Delete entry"
                             >
@@ -616,7 +597,6 @@ export default function GeneralPage() {
       {/* Context menu */}
       {contextMenu && (
         <>
-          {/* Invisible backdrop — closes menu on any click or right-click */}
           <div
             className="fixed inset-0 z-40"
             onClick={() => setContextMenu(null)}
@@ -654,19 +634,26 @@ export default function GeneralPage() {
 
       {/* Modals */}
       {addCategoryOpen && (
-        <CategoryModal onClose={() => setAddCategoryOpen(false)} onSave={createCategory} />
+        <CategoryModal onClose={() => setAddCategoryOpen(false)} onSave={(d) => createCategoryMutation.mutate(d)} />
       )}
       {editCategory && (
-        <CategoryModal initial={editCategory} onClose={() => setEditCategory(null)} onSave={updateCategory} />
+        <CategoryModal
+          initial={editCategory}
+          onClose={() => setEditCategory(null)}
+          onSave={(d) => updateCategoryMutation.mutate({ id: editCategory.id, ...d })}
+        />
       )}
       {addEntryForCategory && (
-        <AddEntryModal onClose={() => setAddEntryForCategory(null)} onSave={addEntry} />
+        <AddEntryModal
+          onClose={() => setAddEntryForCategory(null)}
+          onSave={(entry) => addEntryMutation.mutate({ categoryId: addEntryForCategory, ...entry })}
+        />
       )}
       {editEntry && (
         <EditEntryModal
           entry={editEntry.entry}
           onClose={() => setEditEntry(null)}
-          onSave={(updated) => updateEntry(editEntry.categoryId, updated)}
+          onSave={(updated) => updateEntryMutation.mutate({ id: updated.id, ...updated })}
         />
       )}
       {viewEntry && (
