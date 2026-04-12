@@ -3,21 +3,6 @@ import { format, parseISO } from 'date-fns';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 
-const STORAGE_KEY = 'dentaltrack_availability';
-
-export function loadAvailability() {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveAvailability(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
 /**
  * Modal for setting hours on a single specific date.
  * Props:

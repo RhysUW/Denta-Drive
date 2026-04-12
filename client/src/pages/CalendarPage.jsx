@@ -1,14 +1,15 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { CalendarDays, X } from 'lucide-react';
 import { listAppointments } from '../services/appointmentService';
+import { listAvailability, upsertAvailability, removeAvailability } from '../services/availabilityService';
 import AppointmentModal from '../components/calendar/AppointmentModal';
-import AvailabilityModal, { loadAvailability, saveAvailability } from '../components/calendar/AvailabilityModal';
+import AvailabilityModal from '../components/calendar/AvailabilityModal';
 import Button from '../components/ui/Button';
 import { parseISO, addMonths, subMonths, format } from 'date-fns';
 
@@ -21,14 +22,12 @@ function appointmentColor(appointment) {
 
 export default function CalendarPage() {
   const calendarRef = useRef(null);
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
 
   const [modalState, setModalState] = useState({ open: false, appointment: null, defaultDate: '' });
   const [availabilityMode, setAvailabilityMode] = useState(false);
-  const [availability, setAvailability] = useState(loadAvailability);
-
-  // availabilityModal: { open, date, existingEntry }
   const [availabilityModal, setAvailabilityModal] = useState({ open: false, date: null, existingEntry: null });
 
   const { data: appointments = [], refetch } = useQuery({
@@ -37,6 +36,21 @@ export default function CalendarPage() {
       start: subMonths(new Date(), 3).toISOString(),
       end: addMonths(new Date(), 6).toISOString(),
     }),
+  });
+
+  const { data: availability = [] } = useQuery({
+    queryKey: ['availability'],
+    queryFn: listAvailability,
+  });
+
+  const upsertMutation = useMutation({
+    mutationFn: upsertAvailability,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['availability'] }),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: removeAvailability,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['availability'] }),
   });
 
   useEffect(() => {
@@ -71,15 +85,12 @@ export default function CalendarPage() {
   ], [appointments, availability, highlightId]);
 
   const handleDateClick = (info) => {
-    // Extract date-only portion regardless of view
     const date = info.dateStr.slice(0, 10);
-
     if (availabilityMode) {
       const existingEntry = availability.find((e) => e.date === date) ?? null;
       setAvailabilityModal({ open: true, date, existingEntry });
       return;
     }
-
     setModalState({ open: true, appointment: null, defaultDate: info.dateStr });
   };
 
@@ -107,18 +118,11 @@ export default function CalendarPage() {
   };
 
   const handleAvailabilitySave = (date, startTime, endTime) => {
-    const updated = [
-      ...availability.filter((e) => e.date !== date),
-      { date, startTime, endTime },
-    ];
-    saveAvailability(updated);
-    setAvailability(updated);
+    upsertMutation.mutate({ date, startTime, endTime });
   };
 
   const handleAvailabilityRemove = (date) => {
-    const updated = availability.filter((e) => e.date !== date);
-    saveAvailability(updated);
-    setAvailability(updated);
+    removeMutation.mutate(date);
   };
 
   return (

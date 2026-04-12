@@ -1,6 +1,8 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus } from 'lucide-react';
-import medicationsData, { getCustomEntries, saveCustomEntries } from '../data/medicationsData';
+import medicationsData from '../data/medicationsData';
+import { listCustomMedications, upsertPatch, createNewClass } from '../services/customMedicationsService';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 
@@ -199,20 +201,51 @@ function AddDrugModal({ open, onClose, existingClasses, onSave }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function MedicationsPage() {
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
 
-  // Merge static base data with user patches and new entries from localStorage
-  const [allEntries, setAllEntries] = useState(() => {
-    const { patches = {}, newEntries = [] } = getCustomEntries();
-    const merged = medicationsData.map((entry) =>
-      patches[entry.drugClass]
-        ? { ...entry, drugs: [...entry.drugs, ...patches[entry.drugClass]] }
-        : entry
-    );
-    return [...merged, ...newEntries];
+  const { data: customMeds = [] } = useQuery({
+    queryKey: ['customMedications'],
+    queryFn: listCustomMedications,
   });
+
+  const patchMutation = useMutation({
+    mutationFn: upsertPatch,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customMedications'] }),
+  });
+
+  const newClassMutation = useMutation({
+    mutationFn: createNewClass,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['customMedications'] }),
+  });
+
+  // Merge static data with user's custom medications from Supabase
+  const allEntries = useMemo(() => {
+    const patches = customMeds.filter((m) => m.type === 'patch');
+    const newClasses = customMeds.filter((m) => m.type === 'new_class');
+
+    const merged = medicationsData.map((entry) => {
+      const patch = patches.find((p) => p.drug_class === entry.drugClass);
+      return patch
+        ? { ...entry, drugs: [...entry.drugs, ...patch.drug_names] }
+        : entry;
+    });
+
+    const customEntries = newClasses.map((m) => ({
+      drugs: m.drug_names,
+      drugClass: m.drug_class,
+      mechanism: m.mechanism ?? '',
+      purpose: m.purpose ?? '',
+      sideEffects: m.side_effects ?? '',
+      dentalConsiderations: m.dental_considerations ?? '',
+      drugInteractions: m.drug_interactions ?? '',
+      category: m.category,
+    }));
+
+    return [...merged, ...customEntries];
+  }, [customMeds]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -235,35 +268,19 @@ export default function MedicationsPage() {
   }, [query, allEntries, activeCategory]);
 
   const handleSave = ({ mode, drugName, targetClass, classData }) => {
-    let updated;
-
     if (mode === 'existing') {
-      updated = allEntries.map((entry) =>
-        entry.drugClass === targetClass
-          ? { ...entry, drugs: [...entry.drugs, drugName] }
-          : entry
-      );
+      patchMutation.mutate({ drugClass: targetClass, drugName });
     } else {
-      updated = [...allEntries, { drugs: [drugName], ...classData }];
+      newClassMutation.mutate({
+        drugClass: classData.drugClass,
+        drugNames: [drugName],
+        mechanism: classData.mechanism,
+        purpose: classData.purpose,
+        sideEffects: classData.sideEffects,
+        dentalConsiderations: classData.dentalConsiderations,
+        drugInteractions: classData.drugInteractions,
+      });
     }
-
-    // Persist as two separate structures so static base data is never duplicated:
-    //   patches: { [drugClass]: [extra drug names added to a static class] }
-    //   newEntries: [full entry objects for brand-new classes]
-    const stored = getCustomEntries(); // { patches, newEntries }
-    const patches = stored.patches || {};
-    const newEntries = stored.newEntries || [];
-
-    if (mode === 'existing') {
-      // Record the new drug name under the patched class
-      patches[targetClass] = [...(patches[targetClass] || []), drugName];
-      saveCustomEntries({ patches, newEntries });
-    } else {
-      const newEntry = { drugs: [drugName], ...classData };
-      saveCustomEntries({ patches, newEntries: [...newEntries, newEntry] });
-    }
-
-    setAllEntries(updated);
     setModalOpen(false);
   };
 

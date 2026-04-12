@@ -1171,55 +1171,47 @@ const medicationsData = [
 
 export default medicationsData;
 
-// ─── Custom entries (user-added via MedicationsPage) ────────────────────────
+// ─── Drug name helpers ───────────────────────────────────────────────────────
 
-const CUSTOM_KEY = 'dentaltrack_medications_custom';
-
-/**
- * Read user customisations from localStorage.
- * Shape: { patches: { [drugClass]: string[] }, newEntries: MedicationEntry[] }
- */
-export function getCustomEntries() {
-  try {
-    return JSON.parse(localStorage.getItem(CUSTOM_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-/** Persist user customisations to localStorage. */
-export function saveCustomEntries(data) {
-  localStorage.setItem(CUSTOM_KEY, JSON.stringify(data));
-}
-
-/**
- * All drug names (static + user-added) for autocomplete.
- * Call as a function so PatientForm always gets the latest custom drugs.
- */
+/** All static drug names — used for autocomplete suggestions. */
 export function getAllDrugNames() {
-  const { patches = {}, newEntries = [] } = getCustomEntries();
-  const patchedNames = Object.values(patches).flat();
-  const newNames = newEntries.flatMap((e) => e.drugs);
-  return [...medicationsData.flatMap((e) => e.drugs), ...patchedNames, ...newNames];
+  return medicationsData.flatMap((e) => e.drugs);
 }
 
 /**
  * Find the full medication entry for a given drug name.
- * Searches static data (with user patches applied) and user-added new entries.
- * Returns null if no matching entry is found.
+ * Accepts an optional array of custom medication rows from Supabase so that
+ * user-added drugs are also searchable (e.g. in MedicationBadge).
+ *
+ * customMeds shape: [{ type, drug_class, drug_names, mechanism, purpose,
+ *   side_effects, dental_considerations, drug_interactions, category }]
  */
-export function findEntryForDrug(drugName) {
-  const { patches = {}, newEntries = [] } = getCustomEntries();
-  const merged = [
-    ...medicationsData.map((entry) =>
-      patches[entry.drugClass]
-        ? { ...entry, drugs: [...entry.drugs, ...patches[entry.drugClass]] }
-        : entry
-    ),
-    ...newEntries,
-  ];
+export function findEntryForDrug(drugName, customMeds = []) {
   const lower = drugName.toLowerCase();
-  return merged.find((entry) =>
+
+  // Build merged static entries (apply patches from customMeds)
+  const patches = customMeds.filter((m) => m.type === 'patch');
+  const newClasses = customMeds.filter((m) => m.type === 'new_class');
+
+  const staticMerged = medicationsData.map((entry) => {
+    const patch = patches.find((p) => p.drug_class === entry.drugClass);
+    return patch
+      ? { ...entry, drugs: [...entry.drugs, ...patch.drug_names] }
+      : entry;
+  });
+
+  const customEntries = newClasses.map((m) => ({
+    drugs: m.drug_names,
+    drugClass: m.drug_class,
+    mechanism: m.mechanism ?? '',
+    purpose: m.purpose ?? '',
+    sideEffects: m.side_effects ?? '',
+    dentalConsiderations: m.dental_considerations ?? '',
+    drugInteractions: m.drug_interactions ?? '',
+    category: m.category,
+  }));
+
+  return [...staticMerged, ...customEntries].find((entry) =>
     entry.drugs.some((d) => d.toLowerCase() === lower)
   ) ?? null;
 }
