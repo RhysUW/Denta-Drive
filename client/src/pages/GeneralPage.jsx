@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, FileText, Image as ImageIcon, File, Trash2, X, Upload, ChevronDown, ChevronRight, Edit2 } from 'lucide-react';
 import {
   listCategories,
+  getEntry,
   createCategory as apiCreateCategory,
   updateCategory as apiUpdateCategory,
   deleteCategory as apiDeleteCategory,
@@ -403,6 +404,22 @@ export default function GeneralPage() {
   const [addEntryForCategory, setAddEntryForCategory] = useState(null);
   const [editEntry, setEditEntry] = useState(null); // { categoryId, entry }
   const [viewEntry, setViewEntry] = useState(null);
+  const [viewLoading, setViewLoading] = useState(false);
+
+  const openEntry = async (entry) => {
+    // If we already have the data_url cached, open immediately
+    if (entry.dataUrl !== undefined || entry.type === 'text') {
+      setViewEntry(entry);
+      return;
+    }
+    setViewLoading(entry.id);
+    try {
+      const full = await getEntry(entry.id);
+      setViewEntry(full);
+    } finally {
+      setViewLoading(false);
+    }
+  };
   const [collapsed, setCollapsed] = useState({});
   const [contextMenu, setContextMenu] = useState(null);
 
@@ -556,8 +573,9 @@ export default function GeneralPage() {
                             }}
                           >
                             <button
-                              onClick={() => setViewEntry(entry)}
-                              className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                              onClick={() => openEntry(entry)}
+                              disabled={viewLoading === entry.id}
+                              className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:opacity-60"
                             >
                               {entry.type === 'text' && <FileText size={15} className="text-gray-400 shrink-0" />}
                               {entry.type === 'file' && entry.fileType === 'pdf' && <File size={15} className="text-red-400 shrink-0" />}
@@ -607,7 +625,7 @@ export default function GeneralPage() {
             style={{ top: contextMenu.y, left: contextMenu.x }}
           >
             <button
-              onClick={() => { setViewEntry(contextMenu.entry); setContextMenu(null); }}
+              onClick={() => { openEntry(contextMenu.entry); setContextMenu(null); }}
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
               Open
