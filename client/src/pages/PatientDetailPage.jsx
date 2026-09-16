@@ -44,6 +44,7 @@ export default function PatientDetailPage() {
   const [myNotes, setMyNotes] = useState('');
   const [myNotesExpanded, setMyNotesExpanded] = useState(false);
   const [newNoteContent, setNewNoteContent] = useState('');
+  const [contactPreferences, setContactPreferences] = useState('');
 
   const { data: patient, isLoading } = useQuery({
     queryKey: ['patient', id],
@@ -53,6 +54,7 @@ export default function PatientDetailPage() {
   useEffect(() => {
     if (patient) {
       setMyNotes(patient.my_notes || '');
+      setContactPreferences(patient.contact_preferences || '');
     }
   }, [patient]);
 
@@ -94,6 +96,15 @@ export default function PatientDetailPage() {
       toast.success('Notes saved');
     },
     onError: () => toast.error('Failed to save notes'),
+  });
+
+  const saveContactPreferencesMutation = useMutation({
+    mutationFn: (data) => updatePatient(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+      toast.success('Contact preferences saved');
+    },
+    onError: () => toast.error('Failed to save contact preferences'),
   });
 
   const updateMutation = useMutation({
@@ -197,6 +208,22 @@ export default function PatientDetailPage() {
             <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
             <InfoRow icon={Phone} label="Phone" value={patient.contact} />
             <InfoRow icon={MapPin} label="Address" value={patient.address} />
+            <div>
+              <p className="text-xs text-gray-400 mb-1">Contact Preferences</p>
+              <textarea
+                value={contactPreferences}
+                onChange={(e) => setContactPreferences(e.target.value)}
+                onBlur={() => {
+                  if (contactPreferences !== (patient.contact_preferences || '')) {
+                    saveContactPreferencesMutation.mutate({ contact_preferences: contactPreferences });
+                  }
+                }}
+                placeholder="e.g. prefers text reminders, call after 5pm..."
+                rows={1}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 resize-none overflow-hidden"
+                style={{ fieldSizing: 'content' }}
+              />
+            </div>
           </div>
 
           {/* Appointments summary card */}
