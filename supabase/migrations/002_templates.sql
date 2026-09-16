@@ -1,6 +1,5 @@
 -- ============================================================
 -- Templates table
--- Run this in the Supabase SQL Editor
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS templates (

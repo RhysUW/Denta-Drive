@@ -18,6 +18,8 @@ import AppointmentModal from '../components/calendar/AppointmentModal';
 import { formatDate, formatDateTime, genderBadgeVariant } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
+const LEFT_COLUMN_MIN_WIDTH = 350; // px - left column bubbles never shrink narrower than this
+
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
@@ -147,7 +149,7 @@ export default function PatientDetailPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8">
       {/* Back */}
       <button
         onClick={() => navigate('/')}
@@ -184,9 +186,12 @@ export default function PatientDetailPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div
+        className="grid gap-6"
+        style={{ gridTemplateColumns: `minmax(${LEFT_COLUMN_MIN_WIDTH}px, 2fr) minmax(0, 3fr)` }}
+      >
         {/* Left column */}
-        <div className="col-span-1 space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Contact info card */}
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900">Contact Information</h3>
@@ -218,14 +223,52 @@ export default function PatientDetailPage() {
               <p className="text-sm text-gray-400">No upcoming appointments</p>
             )}
           </div>
+
+          {/* Appointments list */}
+          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">Appointments</h3>
+              <div className="flex gap-3">
+                <Button size="sm" variant="secondary" icon={<History size={13} />} onClick={() => navigate(`/patients/${id}/appointments`)}>
+                  Previous Appointments
+                </Button>
+                <Button size="sm" icon={<Calendar size={13} />} onClick={() => setAddApptOpen(true)}>
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            {appointments.length === 0 ? (
+              <p className="text-sm text-gray-400">No appointments yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {upcomingAppointments.length > 0 && (
+                  <>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Upcoming</p>
+                    {upcomingAppointments.map((a) => (
+                      <AppointmentRow key={a.id} appointment={a} onClick={() => setSelectedAppointment(a)} />
+                    ))}
+                  </>
+                )}
+                {pastAppointments.length > 0 && (
+                  <>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mt-3">Past</p>
+                    {pastAppointments.map((a) => (
+                      <AppointmentRow key={a.id} appointment={a} past onClick={() => setSelectedAppointment(a)} />
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right column */}
-        <div className="col-span-2 space-y-4">
+        <div className="min-w-0 space-y-4">
           {/* Health info */}
           <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Health Information</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <p className="text-xs text-gray-400 mb-2">Health Conditions</p>
                 {patient.health_conditions?.length > 0 ? (
@@ -267,44 +310,6 @@ export default function PatientDetailPage() {
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-xs text-gray-400 mb-1">Remarks</p>
                 <p className="text-sm text-gray-700 leading-relaxed">{patient.remarks}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Appointments list */}
-          <div className="bg-white rounded-2xl border border-brand-500 shadow-sm p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Appointments</h3>
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" icon={<History size={13} />} onClick={() => navigate(`/patients/${id}/appointments`)}>
-                  Previous Appointments
-                </Button>
-                <Button size="sm" icon={<Calendar size={13} />} onClick={() => setAddApptOpen(true)}>
-                  Add
-                </Button>
-              </div>
-            </div>
-
-            {appointments.length === 0 ? (
-              <p className="text-sm text-gray-400">No appointments yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {upcomingAppointments.length > 0 && (
-                  <>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Upcoming</p>
-                    {upcomingAppointments.map((a) => (
-                      <AppointmentRow key={a.id} appointment={a} onClick={() => setSelectedAppointment(a)} />
-                    ))}
-                  </>
-                )}
-                {pastAppointments.length > 0 && (
-                  <>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mt-3">Past</p>
-                    {pastAppointments.map((a) => (
-                      <AppointmentRow key={a.id} appointment={a} past onClick={() => setSelectedAppointment(a)} />
-                    ))}
-                  </>
-                )}
               </div>
             )}
           </div>
