@@ -38,7 +38,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-xl font-bold">D</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">DentalTrack</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Denta Drive</h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
         </div>
 

@@ -13,6 +13,7 @@ const patientSchema = z.object({
   remarks:        z.string().optional().nullable(),
   my_notes:       z.string().optional().nullable(),
   previous_notes: z.string().optional().nullable(),
+  contact_preferences: z.string().optional().nullable(),
 });
 
 const updatePatientSchema = patientSchema.partial();

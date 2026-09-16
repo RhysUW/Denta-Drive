@@ -1,6 +1,5 @@
 -- ============================================================
 -- DentalTrack - Initial Database Schema
--- Run this in the Supabase SQL Editor
 -- ============================================================
 
 -- Users table (custom auth, not Supabase Auth)
